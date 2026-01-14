@@ -11,7 +11,6 @@ await connectDB();
 const app = express();
 
 app.use(cors(configuration.CORS));
-
 app.use(express.json());
 
 app.use('/user/auth', authRoutes);
