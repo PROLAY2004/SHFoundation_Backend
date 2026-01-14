@@ -29,7 +29,6 @@ export default class AuthController {
         res.status(201).json({
           message: 'Verification email sent successfully',
           success: true,
-          data: newUser,
         });
       }
     } catch (err) {
