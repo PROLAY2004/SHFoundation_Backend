@@ -75,7 +75,6 @@ export default class AuthController {
 
       if (!email) {
         res.status(400);
-
         throw new Error('Please Enter a email');
       }
 
@@ -83,11 +82,9 @@ export default class AuthController {
 
       if (!existingUser) {
         res.status(404);
-
         throw new Error('User doesnot exists');
       } else if (!existingUser.isVerified) {
         res.status(400);
-
         throw new Error('User verification pending');
       }
 
@@ -129,6 +126,41 @@ export default class AuthController {
       res.status(200).json({
         message: 'Password Updated',
         success: true,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  signin = async (req, res, next) => {
+    try {
+      const { email, password } = req.body;
+      const userinfo = await user.findOne({ email });
+
+      if (!userinfo) {
+        res.status(404);
+        throw new Error(`User not found`);
+      }
+
+      if (!userinfo.isVerified) {
+        res.status(400);
+        throw new Error(`Email Verification Pending`);
+      }
+
+      const isMatched = await bcrypt.compare(password, userinfo.password);
+
+      if (!isMatched) {
+        res.status(401);
+        throw new Error('Invalid Password');
+      }
+
+      const tokens = await genToken.authToken(userinfo._id);
+
+      res.status(200).json({
+        message: 'Login Successful.',
+        success: true,
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
       });
     } catch (err) {
       next(err);

@@ -23,5 +23,6 @@ router.patch(
   tokenValidator.authTokenValidator,
   auth.resetPassword
 );
+router.post('/login', userValidationRequest.signinRequest, auth.signin); 
 
 export default router;
