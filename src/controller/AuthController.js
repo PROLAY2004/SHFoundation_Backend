@@ -139,7 +139,7 @@ export default class AuthController {
 
       if (!userinfo) {
         res.status(404);
-        throw new Error(`User not found`);
+        throw new Error(`User does not exists`);
       }
 
       if (!userinfo.isVerified) {
