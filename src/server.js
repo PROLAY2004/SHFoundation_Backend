@@ -6,7 +6,9 @@ import errorHandler from './error/errorHandler.js';
 import connectDB from './config/dbConfig.js';
 import authRoutes from './routes/authRoutes.js';
 import profileRoutes from './routes/profileRoutes.js';
+import TokenValidation from './validations/middleware/TokenValidation.js';
 
+const tokenValidator = new TokenValidation();
 await connectDB();
 
 const app = express();
@@ -15,7 +17,7 @@ app.use(cors(configuration.CORS));
 app.use(express.json());
 
 app.use('/user/auth', authRoutes);
-app.use('/user/account', profileRoutes);
+app.use('/user/account', tokenValidator.accessTokenValidator, profileRoutes);
 
 app.use(errorHandler);
 
