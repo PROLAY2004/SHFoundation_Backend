@@ -34,6 +34,10 @@ export default class TokenValidation {
         throw new Error('User doesnot exists');
       }
     } catch (err) {
+      if (err.message == 'jwt expired') {
+        res.status(401);
+      }
+      
       next(err);
     }
   };
