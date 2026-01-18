@@ -37,7 +37,29 @@ export default class TokenValidation {
       if (err.message == 'jwt expired') {
         res.status(401);
       }
-      
+
+      next(err);
+    }
+  };
+
+  refreshTokenValidator = async (req, res, next) => {
+    try {
+      const decoded = verifyToken(req, configuration.REFRESH_SECRET);
+      const appUser = await user.findOne({ _id: decoded.userId });
+
+      if (appUser) {
+        req.user = appUser;
+
+        next();
+      } else {
+        res.status(404);
+        throw new Error('User doesnot exists');
+      }
+    } catch (err) {
+      if (err.message == 'jwt expired') {
+        res.status(401);
+      }
+
       next(err);
     }
   };

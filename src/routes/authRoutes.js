@@ -24,5 +24,6 @@ router.patch(
   auth.resetPassword
 );
 router.post('/login', userValidationRequest.signinRequest, auth.signin); 
+router.get('/refresh', tokenValidator.refreshTokenValidator, auth.refresh);
 
 export default router;
