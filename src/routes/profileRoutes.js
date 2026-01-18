@@ -6,5 +6,6 @@ const profile = new ProfileController();
 const router = express.Router();
 
 router.get('/getUserData', profile.getAllData);
+router.patch('/updateData', profile.updateUserData);
 
 export default router;
