@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 
 import user from '../models/userModel.js';
+import newsLetter from '../models/newsletterModel.js';
 import TokenGenerator from '../utils/TokenGenerator.js';
 
 const genToken = new TokenGenerator();
@@ -51,7 +52,7 @@ export default class AuthController {
 
   signupVerify = async (req, res, next) => {
     try {
-      await user.findByIdAndUpdate(
+      const verifiedUser = await user.findByIdAndUpdate(
         req.user._id,
         { isVerified: true },
         {
@@ -59,6 +60,13 @@ export default class AuthController {
           runValidators: true,
         }
       );
+
+      const newUser = new newsLetter({
+        email: verifiedUser.email,
+        userId: verifiedUser._id,
+      });
+
+      await newUser.save();
 
       res.status(200).json({
         message: 'Email Verified Successfully.',
