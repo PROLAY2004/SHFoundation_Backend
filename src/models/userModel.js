@@ -25,6 +25,7 @@ const usrSchema = new mongoose.Schema(
 
     imagePath: {
       type: String,
+      default: '',
     },
 
     role: {
