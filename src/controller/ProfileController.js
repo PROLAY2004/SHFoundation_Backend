@@ -3,7 +3,7 @@ import newsLetter from '../models/newsletterModel.js';
 export default class ProfileController {
   getAllData = async (req, res, next) => {
     const user = req.user;
-    const newLetterDetails = newsLetter.findOneById(user._id);
+    const newsLetterDetails = await newsLetter.findOne({ email: user.email });
 
     try {
       res.status(200).json({
@@ -11,7 +11,7 @@ export default class ProfileController {
         success: true,
         data: {
           user,
-          newLetterDetails,
+          newsLetterDetails,
         },
       });
     } catch (err) {
