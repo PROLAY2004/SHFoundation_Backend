@@ -7,7 +7,7 @@ export default class ProfileController {
 
     try {
       res.status(200).json({
-        message: 'Valid Link Provided',
+        message: 'All details fetched successfully',
         success: true,
         data: {
           user,
