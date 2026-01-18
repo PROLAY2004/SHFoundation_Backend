@@ -2,9 +2,14 @@ import mongoose from 'mongoose';
 
 const newsLetterSchema = new mongoose.Schema(
   {
-    userId: {
+    email: {
       type: String,
       required: true,
+    },
+
+    userId: {
+      type: String,
+      default: '',
     },
 
     isActive: {
