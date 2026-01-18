@@ -1,4 +1,5 @@
 import user from '../models/userModel.js';
+import newsLetter from '../models/newsletterModel.js';
 
 export default class ProfileController {
   getAllData = async (req, res, next) => {
