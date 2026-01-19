@@ -37,4 +37,25 @@ export default class ProfileController {
       next(err);
     }
   };
+
+  updateAvatar = async (req, res, next) => {
+    try {
+      const avatarUrl = req.body.avatarUrl;
+      await user.findByIdAndUpdate(
+        req.user._id,
+        { avatarUrl },
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+
+      res.status(200).json({
+        message: 'Avatar successfully updated',
+        success: true,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

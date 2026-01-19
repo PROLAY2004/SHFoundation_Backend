@@ -7,5 +7,6 @@ const router = express.Router();
 
 router.get('/getUserData', profile.getAllData);
 router.patch('/updateData', profile.updateUserData);
+router.post('/updateAvatar', profile.updateAvatar);
 
 export default router;
