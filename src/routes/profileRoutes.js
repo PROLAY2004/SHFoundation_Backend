@@ -8,5 +8,7 @@ const router = express.Router();
 router.get('/getUserData', profile.getAllData);
 router.patch('/updateData', profile.updateUserData);
 router.get('/cloudinary', profile.cloudinarySignature);
+router.post('/updateAvatar', profile.updateAvatar);
+router.patch('/setNewsLetter', profile.setNewsLetterPreference);
 
 export default router;

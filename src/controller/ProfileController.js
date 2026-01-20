@@ -46,8 +46,6 @@ export default class ProfileController {
       const paramsToSign = {
         timestamp,
         folder: 'profile_images',
-        allowed_formats: 'jpg,png,jpeg,webp',
-        max_file_size: 2000000, // 2MB
       };
 
       const signature = cloudinary.utils.api_sign_request(
@@ -60,11 +58,47 @@ export default class ProfileController {
         success: true,
         data: {
           timestamp,
-          api_key: cloudinary.config().api_key,
+          apiKey: cloudinary.config().api_key,
           signature,
           folder: paramsToSign.folder,
-          cloud_name: cloudinary.config().cloud_name,
+          cloudName: cloudinary.config().cloud_name,
         },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  updateAvatar = async (req, res, next) => {
+    try {
+      await user.findByIdAndUpdate(req.user._id, req.body, {
+        new: true,
+        runValidators: true,
+      });
+
+      if (req.user.publicId) {
+        await cloudinary.uploader.destroy(req.user.publicId);
+      }
+
+      res.status(200).json({
+        message: 'Profile image updated successfully',
+        success: true,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  setNewsLetterPreference = async (req, res, next) => {
+    try {
+      await newsLetter.findOneAndUpdate({ email: req.user.email }, req.body, {
+        new: true,
+        runValidators: true,
+      });
+
+      res.status(200).json({
+        message: 'Preference updated successfully',
+        success: true,
       });
     } catch (err) {
       next(err);
