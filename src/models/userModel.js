@@ -34,6 +34,12 @@ const usrSchema = new mongoose.Schema(
       enum: ['Admin', 'user'],
       default: 'user',
     },
+
+    publicId: {
+      type: String,
+      default: '',
+      required: true,
+    },
   },
   {
     timestamps: true,
