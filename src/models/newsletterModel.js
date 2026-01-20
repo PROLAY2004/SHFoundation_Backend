@@ -21,7 +21,7 @@ const newsLetterSchema = new mongoose.Schema(
     type: {
       type: String,
       required: true,
-      enum: ['weekly', 'monthly'],
+      enum: ['weekly', 'monthly', 'disabled'],
       default: 'weekly',
     },
   },
