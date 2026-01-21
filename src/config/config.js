@@ -16,6 +16,7 @@ const configuration = {
   MAIL_USER: process.env.MAIL_USER,
   MAIL_PASS: process.env.MAIL_PASS,
   CLOUDINARY_URL: process.env.CLOUDINARY_URL,
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
   CORS: {
     origin: process.env.FRONTEND_URL,
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE'],

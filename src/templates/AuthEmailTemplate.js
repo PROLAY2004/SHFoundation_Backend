@@ -2,7 +2,7 @@ import AuthStyles from '../styles/AuthStyles.js';
 
 const style = new AuthStyles();
 
-export default class AuthEmailStyles {
+export default class AuthEmailTemplate {
   getSignupTemplate = (link) => `
       <!DOCTYPE html>
       <html>

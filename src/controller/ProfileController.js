@@ -2,6 +2,10 @@ import { v2 as cloudinary } from 'cloudinary';
 
 import newsLetter from '../models/newsletterModel.js';
 import user from '../models/userModel.js';
+import volunteer from '../models/voluenteerModel.js';
+import SendEmailService from '../services/SendEmailService.js';
+
+const mailer = new SendEmailService();
 
 export default class ProfileController {
   getAllData = async (req, res, next) => {
@@ -98,6 +102,37 @@ export default class ProfileController {
 
       res.status(200).json({
         message: 'Preference updated successfully',
+        success: true,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  addVolunteer = async (req, res, next) => {
+    try {
+      const voluenteerRequest = new volunteer({
+        email: req.user.email,
+        userId: req.user._id,
+        skills: req.body.skills,
+        availability: req.body.availability,
+        details: req.body.details,
+        termsAccepted: req.body.termsAccepted,
+      });
+
+      await voluenteerRequest.save();
+
+      await mailer.volunteerEmail(req.user.email, {
+        name: req.user.name,
+        skill: req.body.skills,
+        availability: req.body.availability,
+        email: req.user.email,
+        motivation: req.body.details,
+        termsAccepted: req.body.termsAccepted,
+      });
+
+      res.status(200).json({
+        message: 'Request submitted successfully',
         success: true,
       });
     } catch (err) {

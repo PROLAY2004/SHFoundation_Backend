@@ -38,7 +38,6 @@ const usrSchema = new mongoose.Schema(
     publicId: {
       type: String,
       default: '',
-      required: true,
     },
   },
   {

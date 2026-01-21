@@ -1,11 +1,13 @@
 import nodemailer from 'nodemailer';
 
 import configuration from '../config/config.js';
-import AuthEmailStyles from '../templates/AuthEmailTemplate.js';
+import AuthEmailTemplate from '../templates/AuthEmailTemplate.js';
+import VolunteerEmailTemplate from '../templates/VoluenteerEmailTemplate.js';
 
-const emailTemplate = new AuthEmailStyles();
+const authEmailTemplate = new AuthEmailTemplate();
+const volunteerEmailTemplate = new VolunteerEmailTemplate();
 
-export default class SendEmailService {
+export default class SendEmailService { 
   mailSender = async (email, title, body) => {
     try {
       const transporter = nodemailer.createTransport({
@@ -36,18 +38,42 @@ export default class SendEmailService {
       mailResponse = await this.mailSender(
         email,
         'Welcome! Verify Your Email Address',
-        emailTemplate.getSignupTemplate(link)
+        authEmailTemplate.getSignupTemplate(link)
       );
     } else if (method === 'reset') {
       mailResponse = await this.mailSender(
         email,
         'Password Reset Request',
-        emailTemplate.getResetTemplate(link)
+        authEmailTemplate.getResetTemplate(link)
       );
     }
 
     if (mailResponse instanceof Error) {
       throw mailResponse;
+    }
+
+    return true;
+  };
+
+  volunteerEmail = async (email, data) => {
+    const mailResponse1 = await this.mailSender(
+      email,
+      'Application Received',
+      volunteerEmailTemplate.getUserConfirmationTemplate(data)
+    );
+
+    const mailResponse2 = await this.mailSender(
+      configuration.ADMIN_EMAIL,
+      'New Volunteer Application Submitted',
+      volunteerEmailTemplate.getAdminNotificationTemplate(data)
+    );
+
+    if (mailResponse1 instanceof Error) {
+      throw mailResponse1;
+    }
+
+    if (mailResponse2 instanceof Error) {
+      throw mailResponse2;
     }
 
     return true;
