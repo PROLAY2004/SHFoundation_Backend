@@ -52,7 +52,7 @@ export default class TokenValidation {
 
         next();
       } else {
-        res.status(404);
+        res.status(401);
         throw new Error('User doesnot exists');
       }
     } catch (err) {
