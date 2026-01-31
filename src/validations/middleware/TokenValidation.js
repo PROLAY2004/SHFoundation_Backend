@@ -42,6 +42,33 @@ export default class TokenValidation {
     }
   };
 
+  isAdmin = async (req, res, next) => {
+    try {
+      const decoded = verifyToken(req, configuration.ACCESS_SECRET);
+      const appUser = await user.findOne({ _id: decoded.userId });
+
+      if (appUser) {
+        if (appUser.role !== 'admin') {
+          res.status(403);
+          
+          throw new Error('User is not authorized as admin');
+        }
+
+        req.user = appUser;
+        next();
+      } else {
+        res.status(404);
+        throw new Error('User doesnot exists');
+      }
+    } catch (err) {
+      if (err.message == 'jwt expired') {
+        res.status(401);
+      }
+
+      next(err);
+    }
+  };
+
   refreshTokenValidator = async (req, res, next) => {
     try {
       const decoded = verifyToken(req, configuration.REFRESH_SECRET);
