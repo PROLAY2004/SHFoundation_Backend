@@ -95,10 +95,19 @@ export default class ProfileController {
 
   setNewsLetterPreference = async (req, res, next) => {
     try {
-      await newsLetter.findOneAndUpdate({ email: req.user.email }, req.body, {
-        new: true,
-        runValidators: true,
-      });
+      const updatedNewsLetter = await newsLetter.findOneAndUpdate(
+        { email: req.user.email, isActive: true },
+        req.body,
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+
+      if (!updatedNewsLetter) {
+        res.status(400);
+        throw new Error('Newsletter Blocked by Admin');
+      }
 
       res.status(200).json({
         message: 'Preference updated successfully',

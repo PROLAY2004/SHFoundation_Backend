@@ -61,12 +61,19 @@ export default class AuthController {
         }
       );
 
-      const newUser = new newsLetter({
-        email: verifiedUser.email,
-        userId: verifiedUser._id,
-      });
-
-      await newUser.save();
+      await newsLetter.findOneAndUpdate(
+        { email: verifiedUser.email }, // match condition
+        {
+          $set: {
+            email: verifiedUser.email,
+            userId: verifiedUser._id,
+          },
+        },
+        {
+          upsert: true, // insert if not exists
+          new: true, // return updated doc
+        }
+      );
 
       res.status(200).json({
         message: 'Email Verified Successfully.',
