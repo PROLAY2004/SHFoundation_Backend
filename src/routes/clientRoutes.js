@@ -7,5 +7,6 @@ const client = new ClientController();
 const router = express.Router();
 
 router.post('/contact', contactValidator, client.contact);
+router.post('/subscribe', client.subscribtion);
 
 export default router;

@@ -1,8 +1,8 @@
 // import { v2 as cloudinary } from 'cloudinary';
 
-// import newsLetter from '../models/newsletterModel.js';
-// import volunteer from '../models/voluenteerModel.js';
 
+// import volunteer from '../models/voluenteerModel.js';
+import newsLetter from '../models/newsletterModel.js';
 import user from '../models/userModel.js';
 import contact from '../models/contactModel.js';
 import SendEmailService from '../services/SendEmailService.js';
@@ -27,6 +27,28 @@ export default class ClientController {
 
       res.status(201).json({
         message: 'Message submitted successfully',
+        success: true,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  subscribtion = async (req, res, next) => {
+    try {
+      const email = req.body.email;
+
+      if (!email) {
+        res.status(400);
+
+        throw new Error('Please enter a email.');
+      }
+
+      const newsSubscribtion = new newsLetter(req.body);
+      await newsSubscribtion.save();
+
+      res.status(201).json({
+        message: 'Subscribtion added successfully',
         success: true,
       });
     } catch (err) {
