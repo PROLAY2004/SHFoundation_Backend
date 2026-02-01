@@ -51,7 +51,7 @@ export default class TokenValidation {
         if (appUser.role !== 'admin') {
           res.status(403);
           
-          throw new Error('User is not authorized as admin');
+          throw new Error('Not an Admin');
         }
 
         req.user = appUser;
