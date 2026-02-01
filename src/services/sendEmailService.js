@@ -3,11 +3,13 @@ import nodemailer from 'nodemailer';
 import configuration from '../config/config.js';
 import AuthEmailTemplate from '../templates/AuthEmailTemplate.js';
 import VolunteerEmailTemplate from '../templates/VoluenteerEmailTemplate.js';
+import ContactTemplate from '../templates/ContactTemplate.js';
 
 const authEmailTemplate = new AuthEmailTemplate();
 const volunteerEmailTemplate = new VolunteerEmailTemplate();
+const contactEmailTemplate = new ContactTemplate();
 
-export default class SendEmailService { 
+export default class SendEmailService {
   mailSender = async (email, title, body) => {
     try {
       const transporter = nodemailer.createTransport({
@@ -55,15 +57,19 @@ export default class SendEmailService {
     return true;
   };
 
-  volunteerEmail = async (email, data) => {
+  volunteerEmail = async (
+    userEmail,
+    adminEmail = 'rootsofsharedhumanity@gmail.com',
+    data
+  ) => {
     const mailResponse1 = await this.mailSender(
-      email,
+      userEmail,
       'Application Received',
       volunteerEmailTemplate.getUserConfirmationTemplate(data)
     );
 
     const mailResponse2 = await this.mailSender(
-      configuration.ADMIN_EMAIL,
+      adminEmail,
       'New Volunteer Application Submitted',
       volunteerEmailTemplate.getAdminNotificationTemplate(data)
     );
@@ -74,6 +80,24 @@ export default class SendEmailService {
 
     if (mailResponse2 instanceof Error) {
       throw mailResponse2;
+    }
+
+    return true;
+  };
+
+  contactEmail = async (
+    emails = 'rootsofsharedhumanity@gmail.com',
+    data,
+    adminPortalLink
+  ) => {
+    const mailResponse = await this.mailSender(
+      emails,
+      'Contact Form Submitted',
+      contactEmailTemplate.getContactFormTemplate(data, adminPortalLink)
+    );
+
+    if (mailResponse instanceof Error) {
+      throw mailResponse;
     }
 
     return true;

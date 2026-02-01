@@ -1,6 +1,6 @@
-import AuthStyles from '../styles/AuthStyles.js';
+import MailTemplateStyles from '../styles/MailTemplateStyles.js';
 
-const style = new AuthStyles();
+const style = new MailTemplateStyles();
 
 export default class AuthEmailTemplate {
   getSignupTemplate = (link) => `

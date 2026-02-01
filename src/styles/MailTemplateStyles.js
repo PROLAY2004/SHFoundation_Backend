@@ -1,4 +1,4 @@
-export default class AuthStyles {
+export default class MailTemplateStyles {
   getEmailStyles = () => {
     return `
         .email-container {

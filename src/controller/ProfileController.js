@@ -131,7 +131,12 @@ export default class ProfileController {
 
       await voluenteerRequest.save();
 
-      await mailer.volunteerEmail(req.user.email, {
+      const adminEmails = await user.distinct('email', {
+        role: 'admin',
+        isVerified: true,
+      });
+
+      await mailer.volunteerEmail(req.user.email, adminEmails, {
         name: req.user.name,
         skill: req.body.skills,
         availability: req.body.availability,
