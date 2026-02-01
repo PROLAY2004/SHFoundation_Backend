@@ -5,7 +5,7 @@ import user from '../models/userModel.js';
 import volunteer from '../models/voluenteerModel.js';
 
 export default class AdminController {
-  getAllData = async (req, res, next) => {
+  getDashboardData = async (req, res, next) => {
     try {
       const currentUser = req.user;
       const volunteers = await volunteer.find({});
