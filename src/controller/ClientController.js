@@ -44,6 +44,14 @@ export default class ClientController {
         throw new Error('Please enter a email.');
       }
 
+      const isExists = await newsLetter.findOne({email})
+
+      if(isExists){
+        res.status(400)
+
+        throw new Error('Subscribtion already exists.')
+      }
+
       const newsSubscribtion = new newsLetter(req.body);
       await newsSubscribtion.save();
 

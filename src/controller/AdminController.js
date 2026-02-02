@@ -3,15 +3,19 @@ import { v2 as cloudinary } from 'cloudinary';
 import newsLetter from '../models/newsletterModel.js';
 import user from '../models/userModel.js';
 import volunteer from '../models/voluenteerModel.js';
+import contact from '../models/contactModel.js';
 
 export default class AdminController {
   getDashboardData = async (req, res, next) => {
     try {
       const currentUser = req.user;
       const volunteers = await volunteer.find({});
-      const newsLetters = await newsLetter.find({});
+      const newsLetterCount = await newsLetter.find({}).countDocuments();
       const allUsersCount = await user.find({}).countDocuments();
-      const usage = await cloudinary.api.usage(); 
+      const contactCount = await contact
+        .find({ isDeleted: false })
+        .countDocuments();
+      const usage = await cloudinary.api.usage();
 
       const verifiedCount = await user
         .find({ isVerified: true })
@@ -40,6 +44,10 @@ export default class AdminController {
         .find({ status: 'approved' })
         .countDocuments();
 
+      const newContactCount = await contact
+        .find({ status: 'new', isDeleted: false })
+        .countDocuments();
+
       res.status(200).json({
         message: 'All details fetched successfully',
         success: true,
@@ -55,9 +63,13 @@ export default class AdminController {
           pendingVoluenteer,
           approvedVoluenteer,
 
-          newsLetters,
+          newsLetterCount,
           activeNewsletter,
           blockedNewsletter,
+
+          contactCount,
+          newContactCount,
+          oldContactCount: contactCount - newContactCount,
         },
       });
     } catch (err) {
