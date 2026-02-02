@@ -5,8 +5,10 @@ import AdminController from '../controller/AdminController.js';
 const admin = new AdminController();
 const router = express.Router();
 
-router.get('/dashboard', admin.getDashboardData);
-router.get('/contact', admin.getContactData)
 router.post('/info', admin.getUserInfo);
+router.get('/dashboard', admin.getDashboardData);
+router.get('/contact', admin.getContactData);
+router.delete('/contact', admin.deleteMsg);
+router.patch('/contact', admin.changeStatus);
 
 export default router;

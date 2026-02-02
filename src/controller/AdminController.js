@@ -4,6 +4,7 @@ import newsLetter from '../models/newsletterModel.js';
 import user from '../models/userModel.js';
 import volunteer from '../models/voluenteerModel.js';
 import contact from '../models/contactModel.js';
+import activity from '../models/activityModel.js';
 
 export default class AdminController {
   getDashboardData = async (req, res, next) => {
@@ -217,6 +218,78 @@ export default class AdminController {
           currentUser,
           userInfo,
         },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  deleteMsg = async (req, res, next) => {
+    try {
+      const currentUser = req.user;
+      const messageId = req.body.messageId;
+      const deletedMsg = await contact.findByIdAndUpdate(
+        messageId,
+        { isDeleted: true },
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+
+      if (!deletedMsg) {
+        res.status(404);
+
+        throw new Error('Message not Found');
+      }
+
+      const newActivity = new activity({
+        eventName: 'Contact Message Deleted',
+        eventId: deletedMsg._id,
+        adminId: currentUser._id,
+      });
+
+      await newActivity.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Message Deleted Successfully',
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  changeStatus = async (req, res, next) => {
+    try {
+      const currentUser = req.user;
+      const messageId = req.body.messageId;
+      const updatedMsg = await contact.findByIdAndUpdate(
+        messageId,
+        { status: 'viewed' },
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+
+      if (!updatedMsg) {
+        res.status(404);
+
+        throw new Error('Message not Found');
+      }
+
+      const newActivity = new activity({
+        eventName: 'Contact Message Viewed',
+        eventId: updatedMsg._id,
+        adminId: currentUser._id,
+      });
+
+      await newActivity.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Message Status Changed (Viewed)',
       });
     } catch (err) {
       next(err);
