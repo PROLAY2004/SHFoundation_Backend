@@ -7,5 +7,6 @@ const router = express.Router();
 
 router.get('/dashboard', admin.getDashboardData);
 router.get('/contact', admin.getContactData)
+router.post('/info', admin.getUserInfo);
 
 export default router;

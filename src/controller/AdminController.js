@@ -124,7 +124,7 @@ export default class AdminController {
           verifiedCount,
           pendingCount,
 
-          volunteers, // ✅ SAME AS ORIGINAL
+          volunteers,
           pendingVoluenteer,
           approvedVoluenteer,
 
@@ -148,7 +148,7 @@ export default class AdminController {
 
       // Fetch contacts & new-contact count in parallel
       const [contactDetails, newContact] = await Promise.all([
-        contact.find({ isDeleted: false }).lean(),
+        contact.find({ isDeleted: false }).sort({ createdAt: -1 }).lean(),
         contact.countDocuments({ isDeleted: false, status: 'new' }),
       ]);
 
@@ -190,8 +190,32 @@ export default class AdminController {
           totalContact,
           newContact,
 
-          userMessageCount, // ✅ messages from registered users
-          guestMessageCount, // ✅ messages from guests
+          userMessageCount,
+          guestMessageCount,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getUserInfo = async (req, res, next) => {
+    try {
+      const currentUser = req.user;
+      const userInfo = await user.findOne({ email: req.body.email });
+
+      if (!userInfo) {
+        res.status(404);
+
+        throw new Error('Email not registered');
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'User information fetched successfully',
+        data: {
+          currentUser,
+          userInfo,
         },
       });
     } catch (err) {
