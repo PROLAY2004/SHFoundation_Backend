@@ -76,4 +76,22 @@ export default class AdminController {
       next(err);
     }
   };
+
+  getContactData = async (req, res, next) => {
+    try {
+      const currentUser = req.user;
+      const contactDetails = await contact.find({ isDeleted: false });
+
+      res.status(200).json({
+        message: 'All details fetched successfully',
+        success: true,
+        data: {
+          currentUser,
+          contactDetails,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }
