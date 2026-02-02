@@ -295,4 +295,29 @@ export default class AdminController {
       next(err);
     }
   };
+
+  getContactInfo = async (req, res, next) => {
+    try {
+      const messageInfo = await contact.findOne({
+        _id: req.body.messageId,
+        isDeleted: false,
+      });
+
+      if (!messageInfo) {
+        res.status(404);
+
+        throw new Error('Message not Found');
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Message fetched successfully',
+        data: {
+          messageInfo,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

@@ -10,5 +10,6 @@ router.get('/dashboard', admin.getDashboardData);
 router.get('/contact', admin.getContactData);
 router.delete('/contact', admin.deleteMsg);
 router.patch('/contact', admin.changeStatus);
+router.post('/contact', admin.getContactInfo);
 
 export default router;
