@@ -203,7 +203,19 @@ export default class AdminController {
   getUserInfo = async (req, res, next) => {
     try {
       const currentUser = req.user;
-      const userInfo = await user.findOne({ email: req.body.email });
+      let query;
+
+      if (req.body.type === 'email') {
+        query = {
+          email: req.body.key,
+        };
+      } else if (req.body.type === 'userId') {
+        query = {
+          _id: req.body.key,
+        };
+      }
+
+      const userInfo = await user.findOne(query);
 
       if (!userInfo) {
         res.status(404);
