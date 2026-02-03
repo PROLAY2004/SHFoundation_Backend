@@ -344,20 +344,16 @@ export default class AdminController {
   searchMsg = async (req, res, next) => {
     try {
       const search = req.body.query;
-      const messageInfo = await contact.find({
-        isDeleted: false,
-        $or: [
-          { name: { $regex: search, $options: 'i' } },
-          { email: { $regex: search, $options: 'i' } },
-          { subject: { $regex: search, $options: 'i' } },
-        ],
-      });
-
-      if (!messageInfo) {
-        res.status(404);
-
-        throw new Error('No Search Result Found');
-      }
+      const messageInfo = await contact
+        .find({
+          isDeleted: { $exists: true, $eq: false },
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } },
+            { subject: { $regex: search, $options: 'i' } },
+          ],
+        })
+        .sort({ createdAt: -1 });
 
       res.status(200).json({
         success: true,
