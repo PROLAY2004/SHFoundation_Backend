@@ -8,140 +8,148 @@ import activity from '../models/activityModel.js';
 
 export default class AdminController {
   getDashboardData = async (req, res, next) => {
-    try {
-      const currentUser = req.user;
+  try {
+    const currentUser = req.user;
 
-      const [
-        userStats,
-        volunteerStats,
-        newsletterStats,
-        contactStats,
-        volunteers,
-        usage,
-      ] = await Promise.all([
-        // USERS STATS
-        user.aggregate([
-          {
-            $facet: {
-              allUsersCount: [{ $count: 'count' }],
-              verifiedCount: [
-                { $match: { isVerified: true } },
-                { $count: 'count' },
-              ],
-              pendingCount: [
-                { $match: { isVerified: false } },
-                { $count: 'count' },
-              ],
-            },
+    const [
+      userStats,
+      volunteerStats,
+      newsletterStats,
+      contactStats,
+      volunteers,
+      usage,
+    ] = await Promise.all([
+      // USERS STATS
+      user.aggregate([
+        {
+          $facet: {
+            allUsersCount: [{ $count: 'count' }],
+            verifiedCount: [
+              { $match: { isVerified: true } },
+              { $count: 'count' },
+            ],
+            pendingCount: [
+              { $match: { isVerified: false } },
+              { $count: 'count' },
+            ],
           },
-        ]),
-
-        // VOLUNTEER STATS (COUNTS ONLY)
-        volunteer.aggregate([
-          {
-            $facet: {
-              pendingVoluenteer: [
-                { $match: { status: 'pending' } },
-                { $count: 'count' },
-              ],
-              approvedVoluenteer: [
-                { $match: { status: 'approved' } },
-                { $count: 'count' },
-              ],
-            },
-          },
-        ]),
-
-        // NEWSLETTER STATS
-        newsLetter.aggregate([
-          {
-            $facet: {
-              newsLetterCount: [{ $count: 'count' }],
-              blockedNewsletter: [
-                { $match: { isActive: false } },
-                { $count: 'count' },
-              ],
-              activeNewsletter: [
-                {
-                  $match: {
-                    isActive: true,
-                    type: { $in: ['weekly', 'monthly'] },
-                  },
-                },
-                { $count: 'count' },
-              ],
-            },
-          },
-        ]),
-
-        // CONTACT STATS
-        contact.aggregate([
-          {
-            $facet: {
-              contactCount: [
-                { $match: { isDeleted: false } },
-                { $count: 'count' },
-              ],
-              newContactCount: [
-                { $match: { isDeleted: false, status: 'new' } },
-                { $count: 'count' },
-              ],
-            },
-          },
-        ]),
-
-        // ALL VOLUNTEERS (FULL DETAILS)
-        volunteer.find({}).lean(),
-
-        // CLOUDINARY (EXTERNAL)
-        cloudinary.api.usage(),
-      ]);
-
-      // Safe count extractor
-      const getCount = (data, key) => data[0][key][0]?.count || 0;
-
-      const allUsersCount = getCount(userStats, 'allUsersCount');
-      const verifiedCount = getCount(userStats, 'verifiedCount');
-      const pendingCount = getCount(userStats, 'pendingCount');
-
-      const pendingVoluenteer = getCount(volunteerStats, 'pendingVoluenteer');
-      const approvedVoluenteer = getCount(volunteerStats, 'approvedVoluenteer');
-
-      const newsLetterCount = getCount(newsletterStats, 'newsLetterCount');
-      const blockedNewsletter = getCount(newsletterStats, 'blockedNewsletter');
-      const activeNewsletter = getCount(newsletterStats, 'activeNewsletter');
-
-      const contactCount = getCount(contactStats, 'contactCount');
-      const newContactCount = getCount(contactStats, 'newContactCount');
-
-      res.status(200).json({
-        success: true,
-        message: 'All details fetched successfully',
-        data: {
-          currentUser,
-          usage,
-
-          allUsersCount,
-          verifiedCount,
-          pendingCount,
-
-          volunteers,
-          pendingVoluenteer,
-          approvedVoluenteer,
-
-          newsLetterCount,
-          activeNewsletter,
-          blockedNewsletter,
-
-          contactCount,
-          newContactCount,
-          oldContactCount: contactCount - newContactCount,
         },
-      });
-    } catch (err) {
-      next(err);
-    }
-  };
+      ]),
+
+      // VOLUNTEER STATS (COUNTS ONLY)
+      volunteer.aggregate([
+        {
+          $facet: {
+            volunteerCount: [{ $count: 'count' }],
+            pendingVoluenteer: [
+              { $match: { status: 'pending' } },
+              { $count: 'count' },
+            ],
+            approvedVoluenteer: [
+              { $match: { status: 'approved' } },
+              { $count: 'count' },
+            ],
+          },
+        },
+      ]),
+
+      // NEWSLETTER STATS
+      newsLetter.aggregate([
+        {
+          $facet: {
+            newsLetterCount: [{ $count: 'count' }],
+            blockedNewsletter: [
+              { $match: { isActive: false } },
+              { $count: 'count' },
+            ],
+            activeNewsletter: [
+              {
+                $match: {
+                  isActive: true,
+                  type: { $in: ['weekly', 'monthly'] },
+                },
+              },
+              { $count: 'count' },
+            ],
+          },
+        },
+      ]),
+
+      // CONTACT STATS
+      contact.aggregate([
+        {
+          $facet: {
+            contactCount: [
+              { $match: { isDeleted: false } },
+              { $count: 'count' },
+            ],
+            newContactCount: [
+              { $match: { isDeleted: false, status: 'new' } },
+              { $count: 'count' },
+            ],
+          },
+        },
+      ]),
+
+      // LATEST 3 VOLUNTEERS
+      volunteer
+        .find({})
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .lean(),
+
+      // CLOUDINARY (EXTERNAL)
+      cloudinary.api.usage(),
+    ]);
+
+    // Safe count extractor
+    const getCount = (data, key) => data[0][key][0]?.count || 0;
+
+    const allUsersCount = getCount(userStats, 'allUsersCount');
+    const verifiedCount = getCount(userStats, 'verifiedCount');
+    const pendingCount = getCount(userStats, 'pendingCount');
+
+    const volunteerCount = getCount(volunteerStats, 'volunteerCount');
+    const pendingVoluenteer = getCount(volunteerStats, 'pendingVoluenteer');
+    const approvedVoluenteer = getCount(volunteerStats, 'approvedVoluenteer');
+
+    const newsLetterCount = getCount(newsletterStats, 'newsLetterCount');
+    const blockedNewsletter = getCount(newsletterStats, 'blockedNewsletter');
+    const activeNewsletter = getCount(newsletterStats, 'activeNewsletter');
+
+    const contactCount = getCount(contactStats, 'contactCount');
+    const newContactCount = getCount(contactStats, 'newContactCount');
+
+    res.status(200).json({
+      success: true,
+      message: 'All details fetched successfully',
+      data: {
+        currentUser,
+        usage,
+
+        allUsersCount,
+        verifiedCount,
+        pendingCount,
+
+        volunteers,
+        volunteerCount,
+        pendingVoluenteer,
+        approvedVoluenteer,
+
+        newsLetterCount,
+        activeNewsletter,
+        blockedNewsletter,
+
+        contactCount,
+        newContactCount,
+        oldContactCount: contactCount - newContactCount,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
   getContactData = async (req, res, next) => {
     try {
