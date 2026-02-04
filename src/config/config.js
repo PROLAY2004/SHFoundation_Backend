@@ -15,6 +15,8 @@ const configuration = {
   MAIL_SERVICE: process.env.MAIL_SERVICE,
   MAIL_USER: process.env.MAIL_USER,
   MAIL_PASS: process.env.MAIL_PASS,
+  MAIL_HOST: process.env.MAIL_HOST,
+  MAIL_PORT: process.env.MAIL_PORT,
   CLOUDINARY_URL: process.env.CLOUDINARY_URL,
   CORS: {
     origin: process.env.FRONTEND_URL,

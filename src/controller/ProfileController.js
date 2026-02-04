@@ -136,7 +136,7 @@ export default class ProfileController {
         isVerified: true,
       });
 
-      await mailer.volunteerEmail(req.user.email, adminEmails, {
+      mailer.volunteerEmail(req.user.email, adminEmails, {
         name: req.user.name,
         skill: req.body.skills,
         availability: req.body.availability,

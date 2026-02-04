@@ -23,7 +23,7 @@ export default class ClientController {
         isVerified: true,
       });
 
-      await mailer.contactEmail(adminEmails, req.body, adminPortalLink);
+      mailer.contactEmail(adminEmails, req.body, adminPortalLink);
 
       res.status(201).json({
         message: 'Message submitted successfully',

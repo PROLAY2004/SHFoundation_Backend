@@ -13,7 +13,9 @@ export default class SendEmailService {
   mailSender = async (email, title, body) => {
     try {
       const transporter = nodemailer.createTransport({
-        service: configuration.MAIL_SERVICE,
+        host: configuration.MAIL_HOST,
+        port: configuration.MAIL_PORT,
+        secure: true,
         auth: {
           user: configuration.MAIL_USER,
           pass: configuration.MAIL_PASS,
@@ -21,7 +23,7 @@ export default class SendEmailService {
       });
 
       const info = await transporter.sendMail({
-        from: 'Shared Hope Foundation',
+        from: `"Shared Hope Foundation" <${configuration.MAIL_USER}>`,
         to: email,
         subject: title,
         html: body,
