@@ -7,200 +7,188 @@ import contact from '../models/contactModel.js';
 import activity from '../models/activityModel.js';
 
 export default class AdminController {
+  // Dashboard Controllers
   getDashboardData = async (req, res, next) => {
-  try {
-    const currentUser = req.user;
-
-    const [
-      userStats,
-      volunteerStats,
-      newsletterStats,
-      contactStats,
-      volunteers,
-      usage,
-    ] = await Promise.all([
-      // USERS STATS
-      user.aggregate([
-        {
-          $facet: {
-            allUsersCount: [{ $count: 'count' }],
-            verifiedCount: [
-              { $match: { isVerified: true } },
-              { $count: 'count' },
-            ],
-            pendingCount: [
-              { $match: { isVerified: false } },
-              { $count: 'count' },
-            ],
-          },
-        },
-      ]),
-
-      // VOLUNTEER STATS (COUNTS ONLY)
-      volunteer.aggregate([
-        {
-          $facet: {
-            volunteerCount: [{ $count: 'count' }],
-            pendingVoluenteer: [
-              { $match: { status: 'pending' } },
-              { $count: 'count' },
-            ],
-            approvedVoluenteer: [
-              { $match: { status: 'approved' } },
-              { $count: 'count' },
-            ],
-          },
-        },
-      ]),
-
-      // NEWSLETTER STATS
-      newsLetter.aggregate([
-        {
-          $facet: {
-            newsLetterCount: [{ $count: 'count' }],
-            blockedNewsletter: [
-              { $match: { isActive: false } },
-              { $count: 'count' },
-            ],
-            activeNewsletter: [
-              {
-                $match: {
-                  isActive: true,
-                  type: { $in: ['weekly', 'monthly'] },
-                },
-              },
-              { $count: 'count' },
-            ],
-          },
-        },
-      ]),
-
-      // CONTACT STATS
-      contact.aggregate([
-        {
-          $facet: {
-            contactCount: [
-              { $match: { isDeleted: false } },
-              { $count: 'count' },
-            ],
-            newContactCount: [
-              { $match: { isDeleted: false, status: 'new' } },
-              { $count: 'count' },
-            ],
-          },
-        },
-      ]),
-
-      // LATEST 3 VOLUNTEERS
-      volunteer
-        .find({})
-        .sort({ createdAt: -1 })
-        .limit(3)
-        .lean(),
-
-      // CLOUDINARY (EXTERNAL)
-      cloudinary.api.usage(),
-    ]);
-
-    // Safe count extractor
-    const getCount = (data, key) => data[0][key][0]?.count || 0;
-
-    const allUsersCount = getCount(userStats, 'allUsersCount');
-    const verifiedCount = getCount(userStats, 'verifiedCount');
-    const pendingCount = getCount(userStats, 'pendingCount');
-
-    const volunteerCount = getCount(volunteerStats, 'volunteerCount');
-    const pendingVoluenteer = getCount(volunteerStats, 'pendingVoluenteer');
-    const approvedVoluenteer = getCount(volunteerStats, 'approvedVoluenteer');
-
-    const newsLetterCount = getCount(newsletterStats, 'newsLetterCount');
-    const blockedNewsletter = getCount(newsletterStats, 'blockedNewsletter');
-    const activeNewsletter = getCount(newsletterStats, 'activeNewsletter');
-
-    const contactCount = getCount(contactStats, 'contactCount');
-    const newContactCount = getCount(contactStats, 'newContactCount');
-
-    res.status(200).json({
-      success: true,
-      message: 'All details fetched successfully',
-      data: {
-        currentUser,
-        usage,
-
-        allUsersCount,
-        verifiedCount,
-        pendingCount,
-
-        volunteers,
-        volunteerCount,
-        pendingVoluenteer,
-        approvedVoluenteer,
-
-        newsLetterCount,
-        activeNewsletter,
-        blockedNewsletter,
-
-        contactCount,
-        newContactCount,
-        oldContactCount: contactCount - newContactCount,
-      },
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-
-  getContactData = async (req, res, next) => {
     try {
       const currentUser = req.user;
 
-      // Fetch contacts & new-contact count in parallel
-      const [contactDetails, newContact] = await Promise.all([
-        contact.find({ isDeleted: false }).sort({ createdAt: -1 }).lean(),
-        contact.countDocuments({ isDeleted: false, status: 'new' }),
+      const [
+        userStats,
+        volunteerStats,
+        newsletterStats,
+        contactStats,
+        volunteers,
+        usage,
+      ] = await Promise.all([
+        user.aggregate([
+          {
+            $facet: {
+              allUsersCount: [{ $count: 'count' }],
+              verifiedCount: [
+                { $match: { isVerified: true } },
+                { $count: 'count' },
+              ],
+              pendingCount: [
+                { $match: { isVerified: false } },
+                { $count: 'count' },
+              ],
+            },
+          },
+        ]),
+
+        volunteer.aggregate([
+          {
+            $facet: {
+              volunteerCount: [{ $count: 'count' }],
+              pendingVoluenteer: [
+                { $match: { status: 'pending' } },
+                { $count: 'count' },
+              ],
+              approvedVoluenteer: [
+                { $match: { status: 'approved' } },
+                { $count: 'count' },
+              ],
+            },
+          },
+        ]),
+
+        newsLetter.aggregate([
+          {
+            $facet: {
+              newsLetterCount: [{ $count: 'count' }],
+              blockedNewsletter: [
+                { $match: { isActive: false } },
+                { $count: 'count' },
+              ],
+              activeNewsletter: [
+                {
+                  $match: {
+                    isActive: true,
+                    type: { $in: ['weekly', 'monthly'] },
+                  },
+                },
+                { $count: 'count' },
+              ],
+            },
+          },
+        ]),
+
+        contact.aggregate([
+          {
+            $facet: {
+              contactCount: [
+                { $match: { isDeleted: false } },
+                { $count: 'count' },
+              ],
+              newContactCount: [
+                { $match: { isDeleted: false, status: 'new' } },
+                { $count: 'count' },
+              ],
+            },
+          },
+        ]),
+
+        volunteer.find({}).sort({ createdAt: -1 }).limit(3).lean(),
+        cloudinary.api.usage(),
       ]);
 
-      const totalContact = contactDetails.length;
+      const getCount = (data, key) => data[0][key][0]?.count || 0;
 
-      // Extract unique emails from contacts
-      const contactEmails = [
-        ...new Set(contactDetails.map((c) => c.email).filter(Boolean)),
-      ];
+      const allUsersCount = getCount(userStats, 'allUsersCount');
+      const verifiedCount = getCount(userStats, 'verifiedCount');
+      const pendingCount = getCount(userStats, 'pendingCount');
 
-      // Get all registered users with those emails
-      const users = await user
-        .find({ email: { $in: contactEmails } })
-        .select('email')
-        .lean();
+      const volunteerCount = getCount(volunteerStats, 'volunteerCount');
+      const pendingVoluenteer = getCount(volunteerStats, 'pendingVoluenteer');
+      const approvedVoluenteer = getCount(volunteerStats, 'approvedVoluenteer');
 
-      // Convert user emails to Set for O(1) lookup
-      const userEmailSet = new Set(users.map((u) => u.email));
+      const newsLetterCount = getCount(newsletterStats, 'newsLetterCount');
+      const blockedNewsletter = getCount(newsletterStats, 'blockedNewsletter');
+      const activeNewsletter = getCount(newsletterStats, 'activeNewsletter');
 
-      // Count messages
-      let userMessageCount = 0;
-      let guestMessageCount = 0;
-
-      for (const msg of contactDetails) {
-        if (userEmailSet.has(msg.email)) {
-          userMessageCount++;
-        } else {
-          guestMessageCount++;
-        }
-      }
+      const contactCount = getCount(contactStats, 'contactCount');
+      const newContactCount = getCount(contactStats, 'newContactCount');
 
       res.status(200).json({
         success: true,
         message: 'All details fetched successfully',
         data: {
           currentUser,
+          usage,
 
+          allUsersCount,
+          verifiedCount,
+          pendingCount,
+
+          volunteers,
+          volunteerCount,
+          pendingVoluenteer,
+          approvedVoluenteer,
+
+          newsLetterCount,
+          activeNewsletter,
+          blockedNewsletter,
+
+          contactCount,
+          newContactCount,
+          oldContactCount: contactCount - newContactCount,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  //Contact Controllers
+  getContactData = async (req, res, next) => {
+    try {
+      const currentUser = req.user;
+      const { page = 1, limit = 5, filter = 'all', query = '' } = req.body;
+      const skip = (page - 1) * limit;
+      let dbQuery = { isDeleted: false }; // 1. Build Base Query Object (Search + Deletion status)
+
+      if (query) {
+        dbQuery.$or = [
+          { name: { $regex: query, $options: 'i' } },
+          { email: { $regex: query, $options: 'i' } },
+          { subject: { $regex: query, $options: 'i' } },
+        ];
+      }
+
+      if (filter === 'new') dbQuery.status = 'new';
+      if (filter === 'viewed') dbQuery.status = 'viewed';
+
+      const newCountQuery = { ...dbQuery, status: 'new' };
+      const [contactDetails, totalCount, newCount, users] = await Promise.all([
+        contact
+          .find(dbQuery)
+          .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(parseInt(limit))
+          .lean(),
+        contact.countDocuments(dbQuery), // Total matching search
+        contact.countDocuments(newCountQuery), // New matching search (FIXED)
+        user.find({}).select('email').lean(),
+      ]);
+
+      const userEmailSet = new Set(users.map((u) => u.email));
+      const userMessageCount = await contact.countDocuments({
+        ...dbQuery,
+        email: { $in: Array.from(userEmailSet) },
+      });
+      const guestMessageCount = totalCount - userMessageCount;
+
+      res.status(200).json({
+        success: true,
+        data: {
+          currentUser,
           contactDetails,
-          totalContact,
-          newContact,
-
+          totalContact: totalCount,
+          newContact: newCount, // This will now update as you type
           userMessageCount,
           guestMessageCount,
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(totalCount / limit),
         },
       });
     } catch (err) {
@@ -332,32 +320,6 @@ export default class AdminController {
       res.status(200).json({
         success: true,
         message: 'Message fetched successfully',
-        data: {
-          messageInfo,
-        },
-      });
-    } catch (err) {
-      next(err);
-    }
-  };
-
-  searchMsg = async (req, res, next) => {
-    try {
-      const search = req.body.query;
-      const messageInfo = await contact
-        .find({
-          isDeleted: { $exists: true, $eq: false },
-          $or: [
-            { name: { $regex: search, $options: 'i' } },
-            { email: { $regex: search, $options: 'i' } },
-            { subject: { $regex: search, $options: 'i' } },
-          ],
-        })
-        .sort({ createdAt: -1 });
-
-      res.status(200).json({
-        success: true,
-        message: 'Search result fetched successfully',
         data: {
           messageInfo,
         },

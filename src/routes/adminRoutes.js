@@ -6,11 +6,13 @@ const admin = new AdminController();
 const router = express.Router();
 
 router.post('/info', admin.getUserInfo);
+
 router.get('/dashboard', admin.getDashboardData);
-router.get('/contact', admin.getContactData);
+
+router.post('/contact/loader', admin.getContactData);
 router.delete('/contact', admin.deleteMsg);
 router.patch('/contact', admin.changeStatus);
 router.post('/contact', admin.getContactInfo);
-router.post('/contact/search', admin.searchMsg);
+
 
 export default router;
