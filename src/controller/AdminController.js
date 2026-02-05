@@ -328,4 +328,72 @@ export default class AdminController {
       next(err);
     }
   };
+
+  getVolunteerData = async (req, res, next) => {
+    try {
+      const currentUser = req.user;
+
+      const [result] = await volunteer.aggregate([
+        {
+          $facet: {
+            voluenteerDetails: [
+              { $sort: { createdAt: -1 } }, // optional but recommended
+            ],
+            pendingCount: [
+              { $match: { status: 'pending' } },
+              { $count: 'count' },
+            ],
+            rejectedCount: [
+              { $match: { status: 'rejected' } },
+              { $count: 'count' },
+            ],
+            approvedCount: [
+              { $match: { status: 'approved' } },
+              { $count: 'count' },
+            ],
+            totalCount: [{ $count: 'count' }],
+          },
+        },
+      ]);
+
+      res.status(200).json({
+        success: true,
+        message: 'Voluenteer Details Fetched Successfully',
+        data: {
+          currentUser,
+          voluenteerDetails: result.voluenteerDetails,
+          requestsCount: result.totalCount[0]?.count || 0,
+          pendingCount: result.pendingCount[0]?.count || 0,
+          rejectedCount: result.rejectedCount[0]?.count || 0,
+          approvedCount: result.approvedCount[0]?.count || 0,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getVoluenteerInfo = async (req, res, next) => {
+    try {
+      const voluenteerInfo = await volunteer.findOne({
+        _id: req.body.responseId,
+      });
+
+      if (!voluenteerInfo) {
+        res.status(404);
+
+        throw new Error('Voluenteer details not Found');
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Voluenteer details fetched successfully',
+        data: {
+          voluenteerInfo,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }

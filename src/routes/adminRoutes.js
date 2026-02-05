@@ -14,5 +14,6 @@ router.delete('/contact', admin.deleteMsg);
 router.patch('/contact', admin.changeStatus);
 router.post('/contact', admin.getContactInfo);
 
-
+router.post('/volunteer', admin.getVolunteerData);
+router.post('/volunteer/getVoluenteerInfo', admin.getVoluenteerInfo);
 export default router;
