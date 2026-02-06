@@ -5,8 +5,47 @@ import user from '../models/userModel.js';
 import volunteer from '../models/voluenteerModel.js';
 import contact from '../models/contactModel.js';
 import activity from '../models/activityModel.js';
+import SendEmailService from '../services/SendEmailService.js';
+
+const mailer = new SendEmailService();
 
 export default class AdminController {
+  getUserInfo = async (req, res, next) => {
+    try {
+      const currentUser = req.user;
+      let query;
+
+      if (req.body.type === 'email') {
+        query = {
+          email: req.body.key,
+        };
+      } else if (req.body.type === 'userId') {
+        query = {
+          _id: req.body.key,
+        };
+      }
+
+      const userInfo = await user.findOne(query);
+
+      if (!userInfo) {
+        res.status(404);
+
+        throw new Error('Email not registered');
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'User information fetched successfully',
+        data: {
+          currentUser,
+          userInfo,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
   // Dashboard Controllers
   getDashboardData = async (req, res, next) => {
     try {
@@ -196,42 +235,6 @@ export default class AdminController {
     }
   };
 
-  getUserInfo = async (req, res, next) => {
-    try {
-      const currentUser = req.user;
-      let query;
-
-      if (req.body.type === 'email') {
-        query = {
-          email: req.body.key,
-        };
-      } else if (req.body.type === 'userId') {
-        query = {
-          _id: req.body.key,
-        };
-      }
-
-      const userInfo = await user.findOne(query);
-
-      if (!userInfo) {
-        res.status(404);
-
-        throw new Error('Email not registered');
-      }
-
-      res.status(200).json({
-        success: true,
-        message: 'User information fetched successfully',
-        data: {
-          currentUser,
-          userInfo,
-        },
-      });
-    } catch (err) {
-      next(err);
-    }
-  };
-
   deleteMsg = async (req, res, next) => {
     try {
       const currentUser = req.user;
@@ -268,7 +271,7 @@ export default class AdminController {
     }
   };
 
-  changeStatus = async (req, res, next) => {
+  changeMsgStatus = async (req, res, next) => {
     try {
       const currentUser = req.user;
       const messageId = req.body.messageId;
@@ -329,6 +332,7 @@ export default class AdminController {
     }
   };
 
+  //voluenteer Controller
   getVolunteerData = async (req, res, next) => {
     try {
       const currentUser = req.user;
@@ -385,12 +389,59 @@ export default class AdminController {
         throw new Error('Voluenteer details not Found');
       }
 
+      const userId = voluenteerInfo.userId;
+
+      const applicationCount = await volunteer
+        .find({ userId })
+        .countDocuments();
+
       res.status(200).json({
         success: true,
         message: 'Voluenteer details fetched successfully',
         data: {
           voluenteerInfo,
+          applicationCount,
         },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  changeApplicationStatus = async (req, res, next) => {
+    try {
+      const { applicationId, status } = req.body;
+      const updatedRequest = await volunteer.findOneAndUpdate(
+        { _id: applicationId, status: 'pending' },
+        { status },
+        { new: true, runValidators: true }
+      );
+
+      if (!updatedRequest) {
+        res.status(400);
+        throw new Error('Request not found or not in pending state');
+      }
+
+      const userData = await user.findOne({ _id: updatedRequest.userId });
+
+      await activity.create({
+        eventName: `Voluenteer request ${status}`,
+        eventId: updatedRequest._id,
+        adminId: req.user._id,
+      });
+
+      mailer.volunteerUpdateEmail(userData.email, {
+        status: updatedRequest.status,
+        name: userData.name,
+        skill: updatedRequest.skills,
+        availability: updatedRequest.availability,
+        motivation: updatedRequest.details,
+        applicationDate: updatedRequest.createdAt,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: `Request ${status} successfully`,
       });
     } catch (err) {
       next(err);

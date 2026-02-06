@@ -11,9 +11,10 @@ router.get('/dashboard', admin.getDashboardData);
 
 router.post('/contact/loader', admin.getContactData);
 router.delete('/contact', admin.deleteMsg);
-router.patch('/contact', admin.changeStatus);
+router.patch('/contact', admin.changeMsgStatus);
 router.post('/contact', admin.getContactInfo);
 
 router.post('/volunteer', admin.getVolunteerData);
 router.post('/volunteer/getVoluenteerInfo', admin.getVoluenteerInfo);
+router.patch('/voluenteer', admin.changeApplicationStatus);
 export default router;

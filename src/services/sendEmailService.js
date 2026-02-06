@@ -87,6 +87,23 @@ export default class SendEmailService {
     return true;
   };
 
+  volunteerUpdateEmail = async (
+    userEmail,
+    data
+  ) => {
+    const mailResponse = await this.mailSender(
+      userEmail,
+      'Application Status Changed',
+      volunteerEmailTemplate.getStatusUpdateTemplate(data)
+    );
+
+    if (mailResponse instanceof Error) {
+      throw mailResponse;
+    }
+
+    return true;
+  };
+
   contactEmail = async (
     emails = 'rootsofsharedhumanity@gmail.com',
     data,

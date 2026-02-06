@@ -112,7 +112,6 @@ export default class MailTemplateStyles {
             color: #ff8c42;
             font-weight: 600;
         }
-
         `;
   };
 }
