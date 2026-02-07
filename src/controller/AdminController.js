@@ -332,44 +332,121 @@ export default class AdminController {
     }
   };
 
-  //voluenteer Controller
   getVolunteerData = async (req, res, next) => {
     try {
       const currentUser = req.user;
+      const {
+        page = 1,
+        limit = 5,
+        filter = 'all', // Status filter
+        availability = 'all',
+        query = '',
+      } = req.body;
+      const skip = (page - 1) * parseInt(limit);
+      const matchStage = {};
 
-      const [result] = await volunteer.aggregate([
+      if (availability !== 'all') {
+        matchStage.availability = availability;
+      }
+
+      const pipeline = [
+        { $match: matchStage },
         {
-          $facet: {
-            voluenteerDetails: [
-              { $sort: { createdAt: -1 } }, // optional but recommended
-            ],
-            pendingCount: [
-              { $match: { status: 'pending' } },
-              { $count: 'count' },
-            ],
-            rejectedCount: [
-              { $match: { status: 'rejected' } },
-              { $count: 'count' },
-            ],
-            approvedCount: [
-              { $match: { status: 'approved' } },
-              { $count: 'count' },
-            ],
-            totalCount: [{ $count: 'count' }],
+          $addFields: {
+            userObjectId: { $toObjectId: '$userId' },
           },
         },
-      ]);
+        {
+          $lookup: {
+            from: 'userdatas',
+            localField: 'userObjectId',
+            foreignField: '_id',
+            as: 'userInfo',
+          },
+        },
+        {
+          $unwind: {
+            path: '$userInfo',
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+      ];
+
+      if (query) {
+        const searchRegex = { $regex: query, $options: 'i' };
+        pipeline.push({
+          $match: {
+            $or: [
+              { 'userInfo.name': searchRegex },
+              { 'userInfo.email': searchRegex },
+              { skills: searchRegex },
+            ],
+          },
+        });
+      }
+
+      pipeline.push({
+        $facet: {
+          stats: [
+            {
+              $group: {
+                _id: null,
+                pending: {
+                  $sum: { $cond: [{ $eq: ['$status', 'pending'] }, 1, 0] },
+                },
+                approved: {
+                  $sum: { $cond: [{ $eq: ['$status', 'approved'] }, 1, 0] },
+                },
+                rejected: {
+                  $sum: { $cond: [{ $eq: ['$status', 'rejected'] }, 1, 0] },
+                },
+                totalGlobal: { $sum: 1 },
+              },
+            },
+          ],
+
+          voluenteerDetails: [
+            { $match: filter !== 'all' ? { status: filter } : {} },
+            { $sort: { createdAt: -1 } },
+            { $skip: skip },
+            { $limit: parseInt(limit) },
+          ],
+
+          totalCount: [
+            { $match: filter !== 'all' ? { status: filter } : {} },
+            { $count: 'count' },
+          ],
+        },
+      });
+
+      const [result] = await volunteer.aggregate(pipeline);
+      const stats = result.stats[0] || {
+        pending: 0,
+        approved: 0,
+        rejected: 0,
+        totalGlobal: 0,
+      };
+      const voluenteerDetails = result.voluenteerDetails || [];
+      const filteredTotal = result.totalCount[0]?.count || 0;
+      const requestsCount = filteredTotal;
 
       res.status(200).json({
         success: true,
-        message: 'Voluenteer Details Fetched Successfully',
+        message: 'Volunteer Details Fetched Successfully',
         data: {
           currentUser,
-          voluenteerDetails: result.voluenteerDetails,
-          requestsCount: result.totalCount[0]?.count || 0,
-          pendingCount: result.pendingCount[0]?.count || 0,
-          rejectedCount: result.rejectedCount[0]?.count || 0,
-          approvedCount: result.approvedCount[0]?.count || 0,
+          voluenteerDetails,
+
+          // Pagination Data
+          totalItems: filteredTotal,
+          totalPages: Math.ceil(filteredTotal / limit),
+          currentPage: parseInt(page),
+
+          // KPI Cards (Updated based on Search!)
+          requestsCount: requestsCount,
+          pendingCount: stats.pending,
+          approvedCount: stats.approved,
+          rejectedCount: stats.rejected,
         },
       });
     } catch (err) {
