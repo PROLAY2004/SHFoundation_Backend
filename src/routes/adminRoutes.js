@@ -17,4 +17,8 @@ router.post('/contact', admin.getContactInfo);
 router.post('/volunteer', admin.getVolunteerData);
 router.post('/volunteer/getVoluenteerInfo', admin.getVoluenteerInfo);
 router.patch('/voluenteer', admin.changeApplicationStatus);
+
+router.post('/newsletter', admin.getNewsletterData);
+router.patch('/newsletter', admin.changeStatus);
+router.post('/newsletter/getData', admin.fetchNewsData);
 export default router;

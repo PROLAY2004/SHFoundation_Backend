@@ -524,4 +524,106 @@ export default class AdminController {
       next(err);
     }
   };
+
+  getNewsletterData = async (req, res, next) => {
+    try {
+      const currentUser = req.user;
+      const newsletters = await newsLetter.find({}).sort({ createdAt: -1 });
+      const totalSubscriptions = await newsLetter.countDocuments();
+      const activeSubscriptions = await newsLetter.countDocuments({
+        isActive: true,
+        type: { $exists: true, $ne: 'disabled' },
+      });
+      const blockedSubscriptions = await newsLetter.countDocuments({
+        isActive: false,
+      });
+
+      res.status(200).json({
+        success: true,
+        message: 'Newsletter data fetched successfully',
+        data: {
+          currentUser,
+          newsletters,
+          totalSubscriptions,
+          activeSubscriptions,
+          blockedSubscriptions,
+          inactiveSubscriptions:
+            totalSubscriptions - activeSubscriptions - blockedSubscriptions,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  changeStatus = async (req, res, next) => {
+    try {
+      const updatedSubscription = await newsLetter.findByIdAndUpdate(
+        req.body.subId,
+        [
+          {
+            $set: {
+              isActive: { $not: '$isActive' },
+            },
+          },
+        ],
+        {
+          new: true,
+          runValidators: true,
+          updatePipeline: true, // required for array updates
+        }
+      );
+
+      if (!updatedSubscription) {
+        res.status(404);
+        throw new Error('Subscribtion does not exists.');
+      }
+
+      await activity.create({
+        eventName: `Newsletter status changed`,
+        eventId: updatedSubscription._id,
+        adminId: req.user._id,
+      });
+
+      res.status(200).json({
+        message: 'Status Changed Successfully',
+        success: true,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  fetchNewsData = async (req, res, next) => {
+    try {
+      const { subId, userId } = req.body;
+      const subsData = await newsLetter.findOne({ _id: subId });
+      let userData = '';
+
+      if (userId) {
+        userData = await user.findOne({ _id: userId });
+
+        if (!userData) {
+          res.status(404);
+          throw new Error('User Not Found');
+        }
+      }
+
+      if (!subsData) {
+        res.status(404);
+        throw new Error('Newsletter Details Not Available');
+      }
+
+      res.status(200).json({
+        success: true,
+        message: 'Details fetched successfully',
+        data: {
+          userData,
+          subsData,
+        },
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 }
