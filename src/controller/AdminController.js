@@ -525,18 +525,47 @@ export default class AdminController {
     }
   };
 
+  //Newsletter Controllers
   getNewsletterData = async (req, res, next) => {
     try {
       const currentUser = req.user;
-      const newsletters = await newsLetter.find({}).sort({ createdAt: -1 });
-      const totalSubscriptions = await newsLetter.countDocuments();
-      const activeSubscriptions = await newsLetter.countDocuments({
-        isActive: true,
-        type: { $exists: true, $ne: 'disabled' },
-      });
-      const blockedSubscriptions = await newsLetter.countDocuments({
-        isActive: false,
-      });
+      const { page = 1, limit = 5, filter = 'all', query = '' } = req.body;
+      const skip = (page - 1) * limit;
+
+      let dbQuery = {};
+
+      // Search Logic (by email)
+      if (query) {
+        dbQuery.email = { $regex: query, $options: 'i' };
+      }
+
+      // Filter Logic
+      if (filter === 'active') {
+        dbQuery.isActive = true;
+        dbQuery.type = { $ne: 'disabled' };
+      } else if (filter === 'blocked') {
+        dbQuery.isActive = false;
+      } else if (filter === 'inactive') {
+        dbQuery.isActive = true;
+        dbQuery.type = 'disabled';
+      }
+
+      const [newsletters, totalCount, activeCount, blockedCount, allCount] =
+        await Promise.all([
+          newsLetter
+            .find(dbQuery)
+            .sort({ createdAt: -1 })
+            .skip(skip)
+            .limit(parseInt(limit))
+            .lean(),
+          newsLetter.countDocuments(dbQuery), // Count for pagination
+          newsLetter.countDocuments({
+            isActive: true,
+            type: { $ne: 'disabled' },
+          }),
+          newsLetter.countDocuments({ isActive: false }),
+          newsLetter.countDocuments(),
+        ]);
 
       res.status(200).json({
         success: true,
@@ -544,11 +573,13 @@ export default class AdminController {
         data: {
           currentUser,
           newsletters,
-          totalSubscriptions,
-          activeSubscriptions,
-          blockedSubscriptions,
-          inactiveSubscriptions:
-            totalSubscriptions - activeSubscriptions - blockedSubscriptions,
+          totalSubscriptions: allCount,
+          activeSubscriptions: activeCount,
+          blockedSubscriptions: blockedCount,
+          inactiveSubscriptions: allCount - activeCount - blockedCount,
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(totalCount / limit),
+          filteredCount: totalCount, // Total matching current search/filter
         },
       });
     } catch (err) {
